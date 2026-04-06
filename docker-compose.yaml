@@ -1,11 +1,11 @@
 networks:
   cloud-net:
-    [cite_start]name: cloud-net # [cite: 8, 198]
+    name: cloud-net #
 
 services:
-  # 1. Web Frontend - Server 1 [cite: 7, 34]
+  # 1. Web Frontend - Server 1
   web-frontend-server:
-    [cite_start]image: nginx:alpine # Alpine for low RAM [cite: 7, 62]
+    image: nginx:alpine # Alpine for low RAM
     container_name: web-frontend-server
     networks: [cloud-net]
     ports: ["8080:80"]
@@ -15,10 +15,10 @@ services:
     deploy:
       resources:
         limits:
-          [cite_start]memory: 32M # Strict limit for static web [cite: 35]
+          memory: 32M # Strict limit for static web
     restart: unless-stopped
 
-  # 10. Load Balancing Expansion - Server 2 [cite: 524, 526]
+  # 10. Load Balancing Expansion - Server 2
   web-frontend-server-2:
     image: nginx:alpine
     container_name: web-frontend-server-2
@@ -31,9 +31,9 @@ services:
           memory: 32M
     restart: unless-stopped
 
-  # 2. Application Backend [cite: 7, 70]
+  # 2. Application Backend
   application-backend-server:
-    [cite_start]build: ./application-backend-server # [cite: 106, 207]
+    build: ./application-backend-server #
     image: hotensv/app:dev
     container_name: application-backend-server
     networks: [cloud-net]
@@ -44,25 +44,25 @@ services:
     deploy:
       resources:
         limits:
-          [cite_start]memory: 96M # Flask is light 
+          memory: 96M # Flask is light 
     restart: unless-stopped
 
-  # 3. Relational Database [cite: 7, 114]
+  # 3. Relational Database
   relational-database-server:
-    [cite_start]image: mariadb:11-alpine # Alpine version [cite: 216]
+    image: mariadb:11-alpine # Alpine version
     container_name: relational-database-server
     environment:
       MARIADB_ROOT_PASSWORD: root
       MARIADB_DATABASE: minicloud
     volumes:
-      - [cite_start]./relational-database-server/init:/docker-entrypoint-initdb.d:ro # [cite: 222]
+      - ./relational-database-server/init:/docker-entrypoint-initdb.d:ro #
     deploy:
       resources:
         limits:
-          [cite_start]memory: 192M # Cap MariaDB to save host RAM [cite: 115]
+          memory: 192M # Cap MariaDB to save host RAM
     networks: [cloud-net]
 
-  # 4. Authentication Server [cite: 7, 127]
+  # 4. Authentication Server
   authentication-identity-server:
     image: quay.io/keycloak/keycloak:latest
     container_name: authentication-identity-server
@@ -75,27 +75,27 @@ services:
     deploy:
       resources:
         limits:
-          [cite_start]memory: 450M # Keycloak needs at least this to start [cite: 128]
+          memory: 450M # Keycloak needs at least this to start
     networks: [cloud-net]
     restart: unless-stopped
 
-  # 5. Object Storage [cite: 7, 130]
+  # 5. Object Storage
   object-storage-server:
-    [cite_start]image: minio/minio:8.0.0-alpine # Precise light version [cite: 239]
+    image: minio/minio:8.0.0-alpine # Precise light version
     container_name: object-storage-server
     command: ["server","/data","--console-address",":9001"]
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     volumes:
-      - [cite_start]./object-storage-server/data:/data # [cite: 246]
+      - ./object-storage-server/data:/data #
     deploy:
       resources:
         limits:
-          [cite_start]memory: 128M # [cite: 131]
+          memory: 128M #
     networks: [cloud-net]
 
-  # 6. Internal DNS [cite: 7, 134]
+  # 6. Internal DNS
   internal-dns-server:
     image: internetsystemsconsortium/bind9:9.18
     container_name: internal-dns-server
@@ -103,46 +103,46 @@ services:
     volumes:
       - ./internal-dns-server/named.conf.options:/etc/bind/named.conf.options:ro
       - ./internal-dns-server/named.conf.local:/etc/bind/named.conf.local:ro
-      - [cite_start]./internal-dns-server/db.cloud.local:/etc/bind/db.cloud.local:ro # [cite: 256]
+      - ./internal-dns-server/db.cloud.local:/etc/bind/db.cloud.local:ro #
     deploy:
       resources:
         limits:
           memory: 32M
     networks: [cloud-net]
 
-  # 7. Monitoring (Prometheus) [cite: 7, 148]
+  # 7. Monitoring (Prometheus)
   monitoring-prometheus-server:
     image: prom/prometheus:alpine
     container_name: monitoring-prometheus-server
     volumes:
-      - [cite_start]./monitoring-prometheus-server/prometheus.yml:/etc/prometheus/prometheus.yml:ro # [cite: 151]
+      - ./monitoring-prometheus-server/prometheus.yml:/etc/prometheus/prometheus.yml:ro #
     deploy:
       resources:
         limits:
-          [cite_start]memory: 128M # [cite: 149]
+          memory: 128M #
     networks: [cloud-net]
 
-  # 8. Visualization (Grafana) [cite: 7, 158]
+  # 8. Visualization (Grafana)
   monitoring-grafana-dashboard-server:
     image: grafana/grafana:latest
     container_name: monitoring-grafana-dashboard-server
-    [cite_start]ports: ["3000:3000"] # [cite: 33, 273]
+    ports: ["3000:3000"] #
     deploy:
       resources:
         limits:
-          [cite_start]memory: 150M # [cite: 159]
+          memory: 150M #
     networks: [cloud-net]
 
-  # 9. Reverse Proxy / Gateway [cite: 7, 160]
+  # 9. Reverse Proxy / Gateway
   api-gateway-proxy-server:
     image: nginx:alpine
     container_name: api-gateway-proxy-server
     depends_on:
       - web-frontend-server
       - application-backend-server
-    [cite_start]ports: ["80:80"] # [cite: 33, 282]
+    ports: ["80:80"] #
     volumes:
-      - [cite_start]./api-gateway-proxy-server/nginx.conf:/etc/nginx/nginx.conf:ro # [cite: 163, 194]
+      - ./api-gateway-proxy-server/nginx.conf:/etc/nginx/nginx.conf:ro #
     deploy:
       resources:
         limits:
@@ -150,7 +150,7 @@ services:
     networks: [cloud-net]
     restart: unless-stopped
 
-  # Helper: Node Exporter [cite: 155, 157]
+  # Helper: Node Exporter
   monitoring-node-exporter-server:
     image: prom/node-exporter:latest
     container_name: monitoring-node-exporter-server
