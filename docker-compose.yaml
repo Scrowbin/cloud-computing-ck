@@ -1,101 +1,66 @@
 networks:
   cloud-net:
-    name: cloud-net #
+    name: cloud-net
 
 services:
-  # 1. Web Frontend - Server 1
+
   web-frontend-server:
-    image: nginx:alpine # Alpine for low RAM
+    build: ./web-frontend-server
+    image: hotensv/web:dev
     container_name: web-frontend-server
-    networks: [cloud-net]
     ports: ["8080:80"]
-    volumes:
-      - ./web-frontend-server/html:/usr/share/nginx/html:ro
-      - ./web-frontend-server/conf.default:/etc/nginx/conf.d/default.conf:ro
-    deploy:
-      resources:
-        limits:
-          memory: 32M # Strict limit for static web
-    restart: unless-stopped
-
-  # 10. Load Balancing Expansion - Server 2
-  web-frontend-server-2:
-    image: nginx:alpine
-    container_name: web-frontend-server-2
     networks: [cloud-net]
-    volumes:
-      - ./web-frontend-server/html:/usr/share/nginx/html:ro
-    deploy:
-      resources:
-        limits:
-          memory: 32M
     restart: unless-stopped
 
-  # 2. Application Backend
   application-backend-server:
-    build: ./application-backend-server #
+    build: ./application-backend-server
     image: hotensv/app:dev
     container_name: application-backend-server
-    networks: [cloud-net]
     ports: ["8085:8081"]
     environment:
       OIDC_ISSUER: "http://authentication-identity-server:8080/realms/master"
       OIDC_AUDIENCE: "myapp"
-    deploy:
-      resources:
-        limits:
-          memory: 96M # Flask is light 
+    networks: [cloud-net]
     restart: unless-stopped
 
-  # 3. Relational Database
   relational-database-server:
-    image: mariadb:11-alpine # Alpine version
+    image: mariadb:11
     container_name: relational-database-server
+    command: --innodb-buffer-pool-size=64M
     environment:
       MARIADB_ROOT_PASSWORD: root
       MARIADB_DATABASE: minicloud
     volumes:
-      - ./relational-database-server/init:/docker-entrypoint-initdb.d:ro #
-    deploy:
-      resources:
-        limits:
-          memory: 192M # Cap MariaDB to save host RAM
-    networks: [cloud-net]
-
-  # 4. Authentication Server
-  authentication-identity-server:
-    image: quay.io/keycloak/keycloak:latest
-    container_name: authentication-identity-server
-    command: ["start-dev", "--http-relative-path", "/auth"]
-    environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-      KC_HOSTNAME_STRICT: "false"
-      KC_HTTP_ENABLED: "true"
-    deploy:
-      resources:
-        limits:
-          memory: 450M # Keycloak needs at least this to start
+      - ./relational-database-server/init:/docker-entrypoint-initdb.d:ro
     networks: [cloud-net]
     restart: unless-stopped
 
-  # 5. Object Storage
+  authentication-identity-server:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: authentication-identity-server
+    command: ["start-dev"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTP_ENABLED: "true"
+      JAVA_OPTS: "-Xms128m -Xmx256m"
+    ports: ["8081:8080"]
+    networks: [cloud-net]
+    restart: unless-stopped
+
   object-storage-server:
-    image: minio/minio:8.0.0-alpine # Precise light version
+    image: minio/minio
     container_name: object-storage-server
     command: ["server","/data","--console-address",":9001"]
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     volumes:
-      - ./object-storage-server/data:/data #
-    deploy:
-      resources:
-        limits:
-          memory: 128M #
+      - ./object-storage-server/data:/data
+    ports: ["9001:9001"]
     networks: [cloud-net]
+    restart: unless-stopped
 
-  # 6. Internal DNS
   internal-dns-server:
     image: internetsystemsconsortium/bind9:9.18
     container_name: internal-dns-server
@@ -103,59 +68,47 @@ services:
     volumes:
       - ./internal-dns-server/named.conf.options:/etc/bind/named.conf.options:ro
       - ./internal-dns-server/named.conf.local:/etc/bind/named.conf.local:ro
-      - ./internal-dns-server/db.cloud.local:/etc/bind/db.cloud.local:ro #
-    deploy:
-      resources:
-        limits:
-          memory: 32M
+      - ./internal-dns-server/db.cloud.local:/etc/bind/db.cloud.local:ro
     networks: [cloud-net]
+    restart: unless-stopped
 
-  # 7. Monitoring (Prometheus)
+  monitoring-node-exporter-server:
+    image: prom/node-exporter
+    container_name: monitoring-node-exporter-server
+    ports: ["9100:9100"]
+    networks: [cloud-net]
+    restart: unless-stopped
+
   monitoring-prometheus-server:
-    image: prom/prometheus:alpine
+    image: prom/prometheus:latest
     container_name: monitoring-prometheus-server
+    ports: ["9090:9090"]
     volumes:
-      - ./monitoring-prometheus-server/prometheus.yml:/etc/prometheus/prometheus.yml:ro #
-    deploy:
-      resources:
-        limits:
-          memory: 128M #
+      - ./monitoring-prometheus-server/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - "--storage.tsdb.retention.time=1h"
+      - "--storage.tsdb.path=/tmp"
     networks: [cloud-net]
+    restart: unless-stopped
 
-  # 8. Visualization (Grafana)
   monitoring-grafana-dashboard-server:
     image: grafana/grafana:latest
     container_name: monitoring-grafana-dashboard-server
-    ports: ["3000:3000"] #
-    deploy:
-      resources:
-        limits:
-          memory: 150M #
+    environment:
+      GF_INSTALL_PLUGINS: ""
+    ports: ["3000:3000"]
     networks: [cloud-net]
+    restart: unless-stopped
 
-  # 9. Reverse Proxy / Gateway
   api-gateway-proxy-server:
     image: nginx:alpine
     container_name: api-gateway-proxy-server
     depends_on:
       - web-frontend-server
       - application-backend-server
-    ports: ["80:80"] #
+      - authentication-identity-server
+    ports: ["8088:80"]
     volumes:
-      - ./api-gateway-proxy-server/nginx.conf:/etc/nginx/nginx.conf:ro #
-    deploy:
-      resources:
-        limits:
-          memory: 32M
+      - ./api-gateway-proxy-server/nginx.conf:/etc/nginx/nginx.conf:ro
     networks: [cloud-net]
     restart: unless-stopped
-
-  # Helper: Node Exporter
-  monitoring-node-exporter-server:
-    image: prom/node-exporter:latest
-    container_name: monitoring-node-exporter-server
-    networks: [cloud-net]
-    deploy:
-      resources:
-        limits:
-          memory: 20M
