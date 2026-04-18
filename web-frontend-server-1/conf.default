@@ -17,4 +17,8 @@ server {
         access_log off;
         allow all;
     }
+    location /metrics {
+        default_type text/plain;
+        return 200 "nginx_up 1\n";
+    }
 }

@@ -6,8 +6,9 @@ $TTL 1H
 
 ns  IN A    127.0.0.1
 
-web-frontend-server1      IN A 10.10.10.10
-web-frontend-server2      IN A 10.10.10.11
+web-frontend-server-1      IN A 10.10.10.10
+web-frontend-server-2      IN A 10.10.10.11
+web-frontend-server        IN A 10.10.10.10
 
 
 application-backend-server IN A 10.10.10.20
@@ -19,6 +20,6 @@ object-storage-server     IN A 10.10.10.30
 authentication-identity-server IN A 10.10.10.40
 
 
-app        IN A 10.10.10.20
-minio      IN A 10.10.10.30
-keycloak   IN A 10.10.10.40
+app-backend        IN A 10.10.10.20
+minio              IN A 10.10.10.30
+keycloak           IN A 10.10.10.40

@@ -25,7 +25,7 @@ def get_jwks():
 
 @app.route("/hello")
 def hello():
-    return jsonify(message="Hello from App Server!")
+    return jsonify(message="Hello from backend")
 
 
 @app.route("/secure")
