@@ -11,4 +11,10 @@ server {
         alias /usr/share/nginx/html/blog/;
         index index.html;
     }
+
+    location /nginx_status {
+        stub_status;
+        access_log off;
+        allow all;
+    }
 }
