@@ -1,96 +1,127 @@
-### 1. Web Frontend + load balancing (Port 8080)
-- **Mở trình duyệt:** Truy cập `http://localhost:8080/` -> Hiển thị trang chủ thành công (HTTP 200).
-- **Truy cập Blog:** Truy cập `http://localhost:8080/blog/` -> Hiển thị nội dung blog.
-- Truy cập `http://localhost:8080/blog/` (hoặc qua port 80).
-- Trình bày: Show trang Blog Index (có đánh dấu Server 1 hoặc Server 2). Click thử từ danh sách bài viết ở trang index vào từng bài cụ thể để chứng minh link hoạt động tốt và có chứa ảnh minh họa (ví dụ: ảnh Unsplash trong Blog 1).
+# Cloud Demo Instructions
 
-### 2. App Backend (Port 8085 / 8081 nội bộ)
-- **Kiểm tra trực tiếp:** Truy cập `http://localhost:8085/hello` -> Trả về JSON (ví dụ: `{"message": "Hello from backend"}`).
-- **Kiểm tra qua API Gateway:** Truy cập `http://localhost/api/hello` -> Kết quả JSON tương tự.
-- Truy cập `http://localhost:8085/student`.
-- Trình bày: Show kết quả trả về danh sách 5 sinh viên (đọc từ file `students.json`).
-### 3. Database (MariaDB / MySQL - Port 3306)
-- **Mở Terminal**, truy cập vào container DB:
-  ```bash
-  docker exec -it relational-database-server mariadb -u root -p
-  ```
-  *(Nhập mật khẩu đã cấu hình trong docker-compose)* root admin
-- **Chạy lệnh SQL:**
-  ```sql
-  SHOW DATABASES;
-  USE minicloud;
-  SELECT * FROM notes;
-  ```
-  -> Show ra bảng `notes` có sẵn dữ liệu.
-- Trong Terminal (cửa sổ MariaDB ban nãy):
-  ```sql
-  USE studentdb;
-  SELECT * FROM students;
-  ```
-  -> Show bảng gồm `id, student_id, fullname, dob, major` với ít nhất 3 bản ghi.
-### 4. Auth / Identity (Keycloak - Port 8081)
-- **Mở trình duyệt:** Truy cập `http://localhost:8081/` (hoặc qua Proxy: `http://localhost/auth/`)
-- **Đăng nhập:** Vào Administration Console bằng tài khoản admin.
-- **Tạo User (sv01):** Vào mục **Users** -> Nhấn **Add user** -> Điền username là `sv01` -> Chuyển sang tab Credentials, set password và tắt "Temporary".
+## 1. Web Frontend + Load Balancing (Port 8080)
+
+- **Mo trinh duyet:** Truy cap `http://localhost:8080/` -> Hien thi trang chu thanh cong (HTTP 200).
+- **Truy cap Blog:** Truy cap `http://localhost:8080/blog/` -> Hien thi noi dung blog.
+- Truy cap `http://localhost:8080/blog/` (hoac qua port 80).
+- Trinh bay: Show trang Blog Index (co danh dau Server 1 hoac Server 2). Click thu tu danh sach bai viet o trang index vao tung bai cu the de chung minh link hoat dong tot va co chua anh minh hoa (vi du: anh Unsplash trong Blog 1).
+
+## 2. App Backend (Port 8085 / 8081 noi bo)
+
+- **Kiem tra truc tiep:** Truy cap `http://localhost:8085/hello` -> Tra ve JSON (vi du: `{"message": "Hello from backend"}`).
+- **Kiem tra qua API Gateway:** Truy cap `http://localhost/api/hello` -> Ket qua JSON tuong tu.
+- Truy cap `http://localhost:8085/student`.
+- Trinh bay: Show ket qua tra ve danh sach 5 sinh vien (doc tu file `students.json`).
+
+## 3. Database (MariaDB / MySQL - Port 3306)
+
+- **Mo Terminal**, truy cap vao container DB:
+
+```bash
+docker exec -it relational-database-server mariadb -u root -p
+```
+
+(Nhap mat khau da cau hinh trong docker-compose) root admin.
+
+- **Chay lenh SQL:**
+
+```sql
+SHOW DATABASES;
+USE minicloud;
+SELECT * FROM notes;
+```
+
+-> Show ra bang `notes` co san du lieu.
+
+- Trong Terminal (cua so MariaDB ban nay):
+
+```sql
+USE studentdb;
+SELECT * FROM students;
+```
+
+-> Show bang gom `id, student_id, fullname, dob, major` voi it nhat 3 ban ghi.
+
+## 4. Auth / Identity (Keycloak - Port 8081)
+
+- **Mo trinh duyet:** Truy cap `http://localhost:8081/` (hoac qua Proxy: `http://localhost/auth/`).
+- **Dang nhap:** Vao Administration Console bang tai khoan admin.
+- **Tao User (sv01):** Vao muc **Users** -> Nhan **Add user** -> Dien username la `sv01` -> Chuyen sang tab Credentials, set password va tat "Temporary".
 - Trong Admin Console Keycloak:
-  - Chọn Realm ở góc trái trên cùng -> Show Realm tên là **Mã Sinh Viên** (ví dụ `realm_sv001`).
-  - Show 2 users đã tạo trong Realm đó.
-  - Show Client có tên `flask-app` với cấu hình public.
-- *(Tùy chọn nâng cao)* Dùng Postman hoặc CURL lấy token:
-  ```bash
-  curl -X POST "http://localhost:8081/realms/realm_sv001/protocol/openid-connect/token" \
-       -H "Content-Type: application/x-www-form-urlencoded" \
-       -d "username=<user>&password=<pass>&grant_type=password&client_id=flask-app"
-  ```
-  -> Trả về chuỗi JWT Token.
+  - Chon Realm o goc trai tren cung -> Show Realm ten la **Ma Sinh Vien** (vi du `realm_sv001`).
+  - Show 2 users da tao trong Realm do.
+  - Show Client co ten `flask-app` voi cau hinh public.
+- (Tuy chon nang cao) Dung Postman hoac CURL lay token:
 
-### 5. Object Storage (MinIO - Port 9000/9001)
-- **Mở trình duyệt:** Truy cập `http://localhost:9001/` (hoặc Port UI bạn cấu hình).
-- **Đăng nhập:** Bằng Access Key / Secret Key.
-- **Tạo & Upload:** Nhấn **Create Bucket** tên `demo` -> Chọn bucket `demo` -> Nhấn **Upload File** và tải file `index.html` lên.
-- Mở MinIO Console (`http://localhost:9001/`).
-- Show 2 buckets `profile-pics` và `documents`.
-- Upload ảnh avatar vào `profile-pics`, upload file PDF vào `documents`.
-- Show cách lấy public URL (Share file) và dán sang tab ẩn danh để chứng minh có thể truy cập được.
+```bash
+curl -X POST "http://localhost:8081/realms/realm_sv001/protocol/openid-connect/token" \
+     -H "Content-Type: application/x-www-form-urlencoded" \
+     -d "username=<user>&password=<pass>&grant_type=password&client_id=flask-app"
+```
 
-### 6. Internal DNS (Bind9 - Port 1053 UDP) (where is this, is it on windows terminal or docker exex)
-- **Mở Terminal**, chạy lệnh dig để phân giải tên miền:
-  ```bash
-  docker exec internal-dns-server dig @127.0.0.1 web-frontend-server.cloud.local +short
-  ```
-  -> Phải trả về IP nội bộ của web-frontend-server (ví dụ: `10.10.10.10`).
-- Mở Terminal chạy 3 lệnh dig:
-  ```bash
-  docker exec internal-dns-server dig @127.0.0.1 app-backend.cloud.local +short
-  docker exec internal-dns-server dig @127.0.0.1 application-backend-server.cloud.local +short
-  docker exec internal-dns-server dig @127.0.0.1 minio.cloud.local +short
-  docker exec internal-dns-server dig @127.0.0.1 keycloak.cloud.local +short
-  ```
-  -> Show kết quả trả về các IP nội bộ tương ứng.
+-> Tra ve chuoi JWT Token.
 
-### 7. Monitoring (Prometheus + Node Exporter - Port 9090)
-- **Mở trình duyệt:** Truy cập `http://localhost:9090/`.
-- **Kiểm tra Target:** Vào **Status -> Targets**, chỉ ra target node-exporter đang ở trạng thái **UP**.
-- **Chạy Query:** Ở ô tìm kiếm, gõ `node_cpu_seconds_total` và nhấn **Execute**, chuyển sang tab **Graph** để xem biểu đồ.
-- Mở Prometheus (`http://localhost:9090/`).
-- Vào **Status -> Targets**, kéo xuống tìm job của web-frontend-server (port 80) và chứng minh nó đang ở trạng thái **UP**. Mở file `prometheus.yml` ra để giáo viên xem cấu hình.
+## 5. Object Storage (MinIO - Port 9000/9001)
 
-### 8. Grafana (Port 3000)
-- **Mở trình duyệt:** Truy cập `http://localhost:3000/`.
-- **Kiểm tra Data Source:** Vào Connections -> Data sources -> Thấy Prometheus đã được kết nối.
-- **Xem Dashboard:** Mở Dashboard "Node Exporter Full" (Dashboards -> Browse) -> Show các biểu đồ hoạt động.
-- Vào Grafana (`http://localhost:3000/`).
-- Mở Dashboard có tên **"System Health of [Tên SV]"**.
-- Show 3 biểu đồ đã vẽ: **CPU Usage**, **Memory Usage**, và **Network Traffic**.
-### 9. API Gateway / Proxy (Nginx - Port 80)
-- **Mở trình duyệt** (đã test một phần ở trên, giờ tổng hợp lại):
-  - Truy cập `http://localhost/` -> Trả về Web Frontend.
-  - Truy cập `http://localhost/api/hello` -> Trả về Backend JSON.
-  - Truy cập `http://localhost/auth/` -> Trả về giao diện Keycloak.
-- Truy cập trình duyệt hoặc Postman: `http://localhost/student/` (hoặc `http://localhost/api/student`).
-- Show ra kết quả giống hệt khi gọi qua port 8085 trực tiếp.
+- **Mo trinh duyet:** Truy cap `http://localhost:9001/` (hoac Port UI ban cau hinh).
+- **Dang nhap:** Bang Access Key / Secret Key.
+- **Tao va Upload:** Nhan **Create Bucket** ten `demo` -> Chon bucket `demo` -> Nhan **Upload File** va tai file `index.html` len.
+- Mo MinIO Console (`http://localhost:9001/`).
+- Show 2 buckets `profile-pics` va `documents`.
+- Upload anh avatar vao `profile-pics`, upload file PDF vao `documents`.
+- Show cach lay public URL (Share file) va dan sang tab an danh de chung minh co the truy cap duoc.
 
-ping 
+## 6. Internal DNS (Bind9 - Port 1053 UDP)
+
+- **Mo Terminal**, chay lenh dig de phan giai ten mien:
+
+```bash
+docker exec internal-dns-server dig @127.0.0.1 web-frontend-server.cloud.local +short
+```
+
+-> Phai tra ve IP noi bo cua web-frontend-server (vi du: `10.10.10.10`).
+
+- Mo Terminal chay cac lenh dig:
+
+```bash
+docker exec internal-dns-server dig @127.0.0.1 app-backend.cloud.local +short
+docker exec internal-dns-server dig @127.0.0.1 application-backend-server.cloud.local +short
+docker exec internal-dns-server dig @127.0.0.1 minio.cloud.local +short
+docker exec internal-dns-server dig @127.0.0.1 keycloak.cloud.local +short
+```
+
+-> Show ket qua tra ve cac IP noi bo tuong ung.
+
+## 7. Monitoring (Prometheus + Node Exporter - Port 9090)
+
+- **Mo trinh duyet:** Truy cap `http://localhost:9090/`.
+- **Kiem tra Target:** Vao **Status -> Targets**, chi ra target node-exporter dang o trang thai **UP**.
+- **Chay Query:** O o tim kiem, go `node_cpu_seconds_total` va nhan **Execute**, chuyen sang tab **Graph** de xem bieu do.
+- Mo Prometheus (`http://localhost:9090/`).
+- Vao **Status -> Targets**, keo xuong tim job cua web-frontend-server (port 80) va chung minh no dang o trang thai **UP**. Mo file `prometheus.yml` ra de giao vien xem cau hinh.
+
+## 8. Grafana (Port 3000)
+
+- **Mo trinh duyet:** Truy cap `http://localhost:3000/`.
+- **Kiem tra Data Source:** Vao Connections -> Data sources -> Thay Prometheus da duoc ket noi.
+- **Xem Dashboard:** Mo Dashboard "Node Exporter Full" (Dashboards -> Browse) -> Show cac bieu do hoat dong.
+- Vao Grafana (`http://localhost:3000/`).
+- Mo Dashboard co ten **"System Health of [Ten SV]"**.
+- Show 3 bieu do da ve: **CPU Usage**, **Memory Usage**, va **Network Traffic**.
+
+## 9. API Gateway / Proxy (Nginx - Port 80)
+
+- **Mo trinh duyet** (da test mot phan o tren, gio tong hop lai):
+  - Truy cap `http://localhost/` -> Tra ve Web Frontend.
+  - Truy cap `http://localhost/api/hello` -> Tra ve Backend JSON.
+  - Truy cap `http://localhost/auth/` -> Tra ve giao dien Keycloak.
+- Truy cap trinh duyet hoac Postman: `http://localhost/student/` (hoac `http://localhost/api/student`).
+- Show ra ket qua giong het khi goi qua port 8085 truc tiep.
+
+### Ping Connectivity Checks
+
+```bash
 docker exec internal-dns-server ping -c 3 web-frontend-server-1
 docker exec internal-dns-server ping -c 3 application-backend-server
 docker exec internal-dns-server ping -c 3 relational-database-server
@@ -98,45 +129,58 @@ docker exec internal-dns-server ping -c 3 authentication-identity-server
 docker exec internal-dns-server ping -c 3 object-storage-server
 docker exec internal-dns-server ping -c 3 monitoring-prometheus-server
 docker exec internal-dns-server ping -c 3 monitoring-grafana-dashboard-server
-
+```
 
 ---
-To demo this project on AWS, you need to launch a Virtual Machine (EC2 instance), install Docker, transfer your code, and open the firewall ports so your teacher can access it from the internet instead of just your local computer.
 
-Since you successfully commented out the memory limits for your local run and restored Docker, here are the exact steps to deploy it to AWS for the real demo:
+## AWS Demo Deployment
 
+To demo this project on AWS, launch an EC2 instance, install Docker, transfer your code, and open required firewall ports so your teacher can access it from the internet.
 
-### Step 1: Connect to the Server & Install Docker
+Since you already commented out memory limits for local run and restored Docker, follow these steps for deployment:
+
+### Step 1: Connect to the Server and Install Docker
+
 1. SSH into your server using the `.pem` key you downloaded:
 
-
+```bash
 ssh -i "F:\new shit\cloud-key.pem" ubuntu@54.206.106.33
 ```
 
 ### Step 5: Transfer Your Code to AWS
-You can easily upload your project folder to the EC2 instance using `scp` from your Windows terminal:
-*(Note: Don't upload the `.git` or local database data folders if they are huge)*
+
+You can upload your project folder to EC2 using `scp` from Windows terminal.
+
+(Note: Do not upload `.git` or large local data folders.)
+
 ```powershell
 scp -r -i \path\to\cloud-key.pem "f:\n3hk2\CLoud Computing\cloud-computing-ck" ubuntu@<YOUR_EC2_PUBLIC_IP>:/home/ubuntu/
 ```
-*(Alternatively, you can just push your code to a private GitHub repository and `git clone` it directly inside the EC2 instance).*
 
-### Step 6: Uncomment Memory Limits & Start the Cloud
-1. In the EC2 terminal, go to your project folder:
-   ```bash
-   cd cloud-computing-ck
-   ```
-2. **Important:** Since you are now on a 1GB AWS instance, you need to open `docker-compose.yaml` (using `nano docker-compose.yaml`) and **uncomment** all those `deploy: resources: limits: memory:` lines you just commented out locally!
-3. Build and run everything:
-   ```bash
-   docker-compose build
-   docker-compose up -d
-   ```
+(Alternatively, push to a private GitHub repository and run `git clone` on EC2.)
 
-### Step 7: Do the Demo!
-Now, instead of using `localhost`, you just use your AWS EC2 Public IP address for the demo.
+### Step 6: Uncomment Memory Limits and Start the Cloud
+
+- In the EC2 terminal, go to your project folder:
+
+```bash
+cd cloud-computing-ck
+```
+
+- **Important:** On a 1GB AWS instance, open `docker-compose.yaml` (for example, `nano docker-compose.yaml`) and uncomment all `deploy: resources: limits: memory:` lines.
+- Build and run everything:
+
+```bash
+docker-compose build
+docker-compose up -d
+```
+
+### Step 7: Do the Demo
+
+Now use your EC2 Public IP instead of `localhost`:
+
 - Load Balancer: `http://<EC2_PUBLIC_IP>/`
 - Grafana: `http://<EC2_PUBLIC_IP>:3000/`
 - MinIO: `http://<EC2_PUBLIC_IP>:9001/`
 
-*(Everything will behave exactly as it did locally!)*
+(Everything should behave the same as local run.)
