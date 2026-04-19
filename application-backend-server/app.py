@@ -60,6 +60,8 @@ def student():
 
 @app.route("/studentdb")
 @app.route("/studentdb/")
+@app.route("/students-db")
+@app.route("/students-db/")
 def studentdb():
     try:
         conn = mysql.connector.connect(
