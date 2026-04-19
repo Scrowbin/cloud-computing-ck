@@ -1,4 +1,4 @@
-### 1. Web Frontend (Port 8080)
+### 1. Web Frontend + load balancing (Port 8080)
 - **Mở trình duyệt:** Truy cập `http://localhost:8080/` -> Hiển thị trang chủ thành công (HTTP 200).
 - **Truy cập Blog:** Truy cập `http://localhost:8080/blog/` -> Hiển thị nội dung blog.
 - Truy cập `http://localhost:8080/blog/` (hoặc qua port 80).
@@ -29,7 +29,7 @@
   ```
   -> Show bảng gồm `id, student_id, fullname, dob, major` với ít nhất 3 bản ghi.
 ### 4. Auth / Identity (Keycloak - Port 8081)
-- **Mở trình duyệt:** Truy cập `http://localhost:8081/` (hoặc qua Proxy: `http://localhost/auth/` <- this doesnt work)
+- **Mở trình duyệt:** Truy cập `http://localhost:8081/` (hoặc qua Proxy: `http://localhost/auth/`)
 - **Đăng nhập:** Vào Administration Console bằng tài khoản admin.
 - **Tạo User (sv01):** Vào mục **Users** -> Nhấn **Add user** -> Điền username là `sv01` -> Chuyển sang tab Credentials, set password và tắt "Temporary".
 - Trong Admin Console Keycloak:
@@ -105,49 +105,12 @@ To demo this project on AWS, you need to launch a Virtual Machine (EC2 instance)
 
 Since you successfully commented out the memory limits for your local run and restored Docker, here are the exact steps to deploy it to AWS for the real demo:
 
-### Step 1: Launch an AWS EC2 Instance
-1. Go to your **AWS Console** -> **EC2** -> **Launch Instances**.
-2. **Name**: `MyMiniCloud-Demo`
-3. **OS Image**: Select **Ubuntu 24.04 LTS** (Free Tier Eligible).
-4. **Instance Type**: Select **`t2.micro`** or **`t3.micro`** (1GB RAM - Free Tier Eligible).
-5. **Key Pair**: Create a new key pair (e.g., `cloud-key.pem`), download it, and keep it safe. You need this to log in!
-6. **Storage**: Increase the default 8GB to **20GB or 30GB** (30GB is the maximum allowed on the Free Tier).
-7. Click **Launch Instance**.
 
-### Step 2: Open the Firewall (Security Groups)
-By default, AWS blocks all traffic except SSH. You need to open the ports for your demo.
-1. Click on your running instance, go to the **Security** tab, and click the Security Group link.
-2. Click **Edit inbound rules** -> **Add Rule**.
-3. Add rules to allow **Custom TCP** from **Anywhere-IPv4 (0.0.0.0/0)** for the following ports:
-   - `80` (API Gateway / Load Balancer)
-   - `8080` (Web Frontend 1 directly)
-   - `8085` (Backend directly)
-   - `8081` (Keycloak)
-   - `3000` (Grafana)
-   - `9000` & `9001` (MinIO API and Console)
-   - `9090` (Prometheus)
-
-### Step 3: Connect to the Server & Install Docker
+### Step 1: Connect to the Server & Install Docker
 1. SSH into your server using the `.pem` key you downloaded:
-   ```bash
-   ssh -i /path/to/cloud-key.pem ubuntu@<YOUR_EC2_PUBLIC_IP>
-   ```
-2. Once logged in, install Docker and Docker-Compose:
-   ```bash
-   sudo apt update
-   sudo apt install docker.io docker-compose -y
-   sudo usermod -aG docker ubuntu
-   ```
-   *(After this, log out by typing `exit` and SSH back in so the permissions take effect).*
 
-### Step 4: Create the 4GB Swap File (Crucial!)
-Because the `t2.micro` only has 1GB of RAM, you **must** run these commands to prevent it from crashing:
-```bash
-sudo fallocate -l 4G /swapfile
-sudo chmod 600 /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+ssh -i "F:\new shit\cloud-key.pem" ubuntu@54.206.106.33
 ```
 
 ### Step 5: Transfer Your Code to AWS
