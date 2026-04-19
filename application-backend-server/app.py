@@ -52,6 +52,7 @@ def secure():
         return jsonify(error=str(exc)), 401
 
 @app.route("/student")
+@app.route("/student/")
 def student():
     with open("students.json") as f:
         data = json.load(f)
