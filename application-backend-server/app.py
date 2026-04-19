@@ -5,6 +5,7 @@ import time
 import requests
 from flask import Flask, jsonify, request
 from jose import jwt
+import mysql.connector
 
 app = Flask(__name__)
 
@@ -55,6 +56,25 @@ def student():
     with open("students.json") as f:
         data = json.load(f)
     return jsonify(data)
+
+@app.route("/studentdb")
+@app.route("/studentdb/")
+def studentdb():
+    try:
+        conn = mysql.connector.connect(
+            host="relational-database-server",
+            user="root",
+            password="root",
+            database="studentdb"
+        )
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT id, student_id, fullname, dob, major FROM students")
+        students = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify(students)
+    except Exception as e:
+        return jsonify(error=str(e)), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8081)

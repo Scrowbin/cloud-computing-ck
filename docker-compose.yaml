@@ -11,10 +11,6 @@ services:
     ports: ["8080:80"]
     networks: [cloud-net]
     restart: unless-stopped
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 64M
 
   web-frontend-server-2:
     build: ./web-frontend-server-2
@@ -22,10 +18,6 @@ services:
     container_name: web-frontend-server-2
     networks: [cloud-net]
     restart: unless-stopped
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 64M
 
   application-backend-server:
     build: ./application-backend-server
@@ -37,10 +29,6 @@ services:
       OIDC_AUDIENCE: "myapp"
     networks: [ cloud-net ]
     restart: unless-stopped
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 128M
 
   relational-database-server:
     image: mariadb:11
@@ -54,10 +42,6 @@ services:
     ports: [ "3306:3306" ]
     networks: [ cloud-net ]
     restart: unless-stopped
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 200M
 
   authentication-identity-server:
     image: quay.io/keycloak/keycloak:latest
@@ -69,16 +53,12 @@ services:
       KC_HOSTNAME: "localhost"
       KC_HOSTNAME_STRICT: "false"
       KC_HTTP_ENABLED: "true"
-      KC_HTTP_RELATIVE_PATH: "/auth"       # <-- ADD THIS
+      KC_HTTP_RELATIVE_PATH: "/auth"
       KC_PROXY_HEADERS: "xforwarded"
       JAVA_OPTS: "-Xms128m -Xmx256m"
     ports: [ "8081:8080" ]
     networks: [ cloud-net ]
     restart: unless-stopped
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 400M
 
   object-storage-server:
     image: minio/minio
@@ -91,11 +71,6 @@ services:
       - ./object-storage-server/data:/data
     ports: [ "9000:9000", "9001:9001" ]
     networks: [ cloud-net ]
-    restart: unless-stopped
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 250M
 
   internal-dns-server:
     image: internetsystemsconsortium/bind9:9.18
@@ -110,10 +85,6 @@ services:
       - ./internal-dns-server/db.cloud.local:/etc/bind/db.cloud.local:ro
     networks: [ cloud-net ]
     restart: unless-stopped
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 64M
 
   monitoring-node-exporter-server:
     image: prom/node-exporter:latest
@@ -121,10 +92,6 @@ services:
     ports: [ "9100:9100" ]
     networks: [ cloud-net ]
     restart: unless-stopped
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 64M
 
   monitoring-prometheus-server:
     image: prom/prometheus:latest
@@ -138,10 +105,6 @@ services:
       - "--storage.tsdb.path=/tmp"
     networks: [ cloud-net ]
     restart: unless-stopped
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 200M
 
   monitoring-grafana-dashboard-server:
     image: grafana/grafana:latest
@@ -154,10 +117,6 @@ services:
     ports: [ "3000:3000" ]
     networks: [ cloud-net ]
     restart: unless-stopped
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 200M
 
   api-gateway-proxy-server:
     image: nginx:stable
@@ -172,7 +131,3 @@ services:
       - ./api-gateway-proxy-server/nginx.conf:/etc/nginx/nginx.conf:ro
     networks: [ cloud-net ]
     restart: unless-stopped
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 64M
